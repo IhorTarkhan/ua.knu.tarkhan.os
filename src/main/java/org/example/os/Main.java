@@ -11,13 +11,19 @@ public class Main {
         PipeUtil.fillPipe(pipeF, "Test Data to file F");
         PipeUtil.fillPipe(pipeG, "Test Data to file G");
 
-        FileF fileF = new FileF(pipeF);
-        FileG fileG = new FileG(pipeG);
+        Thread fileThreadF = new FileF(pipeF);
+        Thread fileThreadG = new FileG(pipeG);
 
-        fileF.start();
-        fileG.start();
+        fileThreadF.start();
+        fileThreadG.start();
 
-        fileF.join();
-        fileG.join();
+        fileThreadF.join();
+        fileThreadG.join();
+
+        String responseFromF = PipeUtil.getData(pipeF);
+        String responseFromG = PipeUtil.getData(pipeG);
+
+        System.out.println(responseFromF);
+        System.out.println(responseFromG);
     }
 }
