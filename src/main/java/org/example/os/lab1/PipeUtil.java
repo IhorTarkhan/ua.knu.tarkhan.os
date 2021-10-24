@@ -1,4 +1,4 @@
-package org.example.os;
+package org.example.os.lab1;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

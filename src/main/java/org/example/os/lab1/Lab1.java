@@ -1,9 +1,9 @@
-package org.example.os;
+package org.example.os.lab1;
 
 import java.io.IOException;
 import java.nio.channels.Pipe;
 
-public class Main {
+public class Lab1 {
     public static void main(String[] args) throws IOException, InterruptedException {
         Pipe pipeF = Pipe.open();
         Pipe pipeG = Pipe.open();
