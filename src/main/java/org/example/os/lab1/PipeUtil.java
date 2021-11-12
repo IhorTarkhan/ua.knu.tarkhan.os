@@ -16,7 +16,7 @@ public class PipeUtil {
                 pipeSinkChannel.write(bufferWrite);
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+
         }
     }
 
@@ -36,7 +36,7 @@ public class PipeUtil {
             bufferRead.clear();
             return resultBuilder.toString();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            return "NaN";
         }
     }
 }
