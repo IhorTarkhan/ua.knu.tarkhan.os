@@ -80,7 +80,7 @@ public class Scheduling {
         int size = processVector.size();
         for (i = 0; i < size; i++) {
             Process process = (Process) processVector.elementAt(i);
-            System.out.println("process " + i + " " + process.cpu_time + " " + process.io_blocking + " " + process.cpu_done + " " + process.num_blocked);
+            System.out.println("process " + i + " " + process.totalSize + " " + process.batchSize + " " + process.totalProgress + " " + process.blockersCount);
         }
         System.out.println("runtime " + runtime);
     }
@@ -117,7 +117,7 @@ public class Scheduling {
                 i++;
             }
         }
-        result = SchedulingAlgorithm.run(runtime, processVector, result);
+        result = GuaranteedSchedulingAlgorithm.run(runtime, processVector, result);
         try {
             //BufferedWriter out = new BufferedWriter(new FileWriter(resultsFile));
             PrintStream out = new PrintStream(new FileOutputStream(resultsFile));
@@ -135,25 +135,25 @@ public class Scheduling {
                 } else {
                     out.print("\t");
                 }
-                out.print(Integer.toString(process.cpu_time));
-                if (process.cpu_time < 100) {
+                out.print(Integer.toString(process.totalSize));
+                if (process.totalSize < 100) {
                     out.print(" (ms)\t\t");
                 } else {
                     out.print(" (ms)\t");
                 }
-                out.print(Integer.toString(process.io_blocking));
-                if (process.io_blocking < 100) {
+                out.print(Integer.toString(process.batchSize));
+                if (process.batchSize < 100) {
                     out.print(" (ms)\t\t");
                 } else {
                     out.print(" (ms)\t");
                 }
-                out.print(Integer.toString(process.cpu_done));
-                if (process.cpu_done < 100) {
+                out.print(Integer.toString(process.totalProgress));
+                if (process.totalProgress < 100) {
                     out.print(" (ms)\t\t");
                 } else {
                     out.print(" (ms)\t");
                 }
-                out.println(process.num_blocked + " times");
+                out.println(process.blockersCount + " times");
             }
             out.close();
         } catch (IOException e) { /* Handle exceptions */ }

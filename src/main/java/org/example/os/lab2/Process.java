@@ -1,17 +1,29 @@
 package org.example.os.lab2;
 
 public class Process {
-  public int cpu_time; // required total time
-  public int io_blocking; // batch per one time
-  public int cpu_done; // count of finished time
-  public int io_next; // count of finished in batch
-  public int num_blocked;
+    public final int totalSize;
+    public final int batchSize;
+    public int totalProgress;
+    public int batchProgress;
+    public int blockersCount;
 
-  public Process(int cpu_time, int io_blocking, int cpu_done, int io_next, int num_blocked) {
-    this.cpu_time = cpu_time;
-    this.io_blocking = io_blocking;
-    this.cpu_done = cpu_done;
-    this.io_next = io_next;
-    this.num_blocked = num_blocked;
-  }
+    public Process(int totalSize, int batchSize, int totalProgress, int batchProgress, int blockersCount) {
+        this.totalSize = totalSize;
+        this.batchSize = batchSize;
+        this.totalProgress = totalProgress;
+        this.batchProgress = batchProgress;
+        this.blockersCount = blockersCount;
+    }
+
+    public boolean isFinish() {
+        return totalProgress >= totalSize;
+    }
+
+    public boolean isActive() {
+        return !isFinish();
+    }
+
+    public boolean isBatchFinish() {
+        return batchSize == batchProgress;
+    }
 }
