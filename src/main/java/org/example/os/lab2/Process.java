@@ -7,12 +7,12 @@ public class Process {
     public int batchProgress;
     public int blockersCount;
 
-    public Process(int totalSize, int batchSize, int totalProgress, int batchProgress, int blockersCount) {
+    public Process(int totalSize, int batchSize) {
         this.totalSize = totalSize;
         this.batchSize = batchSize;
-        this.totalProgress = totalProgress;
-        this.batchProgress = batchProgress;
-        this.blockersCount = blockersCount;
+        this.totalProgress = 0;
+        this.batchProgress = 0;
+        this.blockersCount = 0;
     }
 
     public boolean isFinish() {

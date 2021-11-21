@@ -1,58 +1,38 @@
 package org.example.os.lab2;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+
 public class Common {
+    private static final Queue<Double> doubles = new LinkedList<>(List.of(
+            0.6738822030212246,
+            0.9038304580623565,
+            0.14593099990774294,
+            0.5620797486903003,
+            0.6432738245122781,
+            0.11506421648393828
+    ));
 
-  static public int s2i (String s) {
-    int i = 0;
 
-    try {
-      i = Integer.parseInt(s.trim());
-    } catch (NumberFormatException nfe) {
-      System.out.println("NumberFormatException: " + nfe.getMessage());
+    static public double R1() {
+//        java.util.Random generator = new java.util.Random(System.currentTimeMillis());
+//        double U = generator.nextDouble();
+//        double V = generator.nextDouble();
+        double U = doubles.poll();
+        double V = doubles.poll();
+        double X = Math.sqrt(8 / Math.E) * (V - 0.5) / U;
+        if (X * X > 5 - 4 * Math.exp(.25) * U) {
+            return -1;
+        }
+        if (X * X >= 4 * Math.exp(-1.35) / U + 1.4) {
+            return -1;
+        }
+        if (X * X >= -4 * Math.log(U)) {
+            return -1;
+        }
+        return X;
     }
-    return i;
-  }
-
-  static public double R1 () {
-    java.util.Random generator = new java.util.Random(System.currentTimeMillis());
-    double U = generator.nextDouble();
-    while (U < 0 || U >= 1) {
-      U = generator.nextDouble();
-    }
-    double V = generator.nextDouble();
-    while (V < 0 || V >= 1) {
-      V = generator.nextDouble();
-    }
-    double X =  Math.sqrt((8/Math.E)) * (V - 0.5)/U;
-    if (!(R2(X,U))) { return -1; }
-    if (!(R3(X,U))) { return -1; }
-    if (!(R4(X,U))) { return -1; }
-    return X;
-  }
-
-  static public boolean R2 (double X, double U) {
-    if ((X * X) <= (5 - 4 * Math.exp(.25) * U)) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  static public boolean R3 (double X, double U) {
-    if ((X * X) >= (4 * Math.exp(-1.35) / U + 1.4)) {
-      return false;
-    } else {
-      return true;
-    }
-  }
-
-  static public boolean R4 (double X, double U) {
-    if ((X * X) < (-4 * Math.log(U))) {
-      return true;
-    } else {
-      return false;
-    }
-  }
 
 }
 

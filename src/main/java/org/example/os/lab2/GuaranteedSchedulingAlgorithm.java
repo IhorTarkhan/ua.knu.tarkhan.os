@@ -7,10 +7,7 @@ import java.util.List;
 
 public class GuaranteedSchedulingAlgorithm {
 
-    public static Results run(int maxRunTime, List<Process> processes, Results result) {
-        result.schedulingType = "Batch (Preemptive)";
-        result.schedulingName = "Guaranteed";
-
+    public static Results run(int maxRunTime, List<Process> processes) {
         int currentProcessIndex = 0;
         int currentRunTime = 0;
 
@@ -44,8 +41,7 @@ public class GuaranteedSchedulingAlgorithm {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        result.compuTime = currentRunTime;
-        return result;
+        return new Results("Batch (Preemptive)", "Guaranteed", currentRunTime);
     }
 
     private static int getNextProcessIndex(int defaultValue, List<Process> processes) {
