@@ -85,8 +85,7 @@ public class Scheduling {
         System.out.println("runtime " + runtime);
     }
 
-    public static void main(String[] argsOld) {
-        String[] args = {"/Users/ihor/IdeaProjects/os/src/main/java/org/example/os/lab2/scheduling.conf"};
+    public static void main(String[] args) {
         int i = 0;
 
         if (args.length != 1) {

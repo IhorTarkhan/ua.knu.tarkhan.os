@@ -14,10 +14,10 @@ public class GuaranteedSchedulingAlgorithm {
         int currentProcessIndex = 0;
         int currentRunTime = 0;
 
-        try (PrintStream out = new PrintStream(new FileOutputStream("Summary-Processes"))) {
+        try (PrintStream out = new PrintStream(new FileOutputStream("Summary-Processes.csv"))) {
             Process currentProcess = processes.get(currentProcessIndex);
             printRegistered(out, currentProcessIndex, currentProcess);
-            while (currentRunTime < maxRunTime && processes.stream().anyMatch(Process::isActive)) {
+            while (processes.stream().anyMatch(Process::isActive)) {
                 if (currentProcess.isFinish()) {
                     printlnCompleted(out, currentProcessIndex, currentProcess);
 
@@ -63,14 +63,14 @@ public class GuaranteedSchedulingAlgorithm {
     }
 
     private static void printRegistered(PrintStream out, int processIndex, Process process) {
-        out.println("Process: " + processIndex + " registered... (" + process.totalSize + " " + process.batchSize + " " + process.totalProgress + " " + process.totalProgress + ")");
+        out.printf("%d,%d,%d,%d%n", processIndex, process.totalProgress, process.totalSize, process.batchSize);
     }
 
     private static void printlnCompleted(PrintStream out, int processIndex, Process process) {
-        out.println("Process: " + processIndex + " completed... (" + process.totalSize + " " + process.batchSize + " " + process.totalProgress + " " + process.totalProgress + ")");
+//        out.printf("%d,completed,%d,%d,%d,%d%n", processIndex, process.totalSize, process.batchSize, process.totalProgress, process.totalProgress);
     }
 
     private static void printlnBlocked(PrintStream out, int processIndex, Process process) {
-        out.println("Process: " + processIndex + " I/O blocked... (" + process.totalSize + " " + process.batchSize + " " + process.totalProgress + " " + process.totalProgress + ")");
+//        out.printf("%d,blocked,%d,%d,%d,%d%n", processIndex, process.totalSize, process.batchSize, process.totalProgress, process.totalProgress);
     }
 }
