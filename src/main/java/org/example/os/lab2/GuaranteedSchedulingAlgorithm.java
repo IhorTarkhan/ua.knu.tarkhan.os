@@ -31,7 +31,7 @@ public class GuaranteedSchedulingAlgorithm {
 
                     currentProcess.blockersCount++;
                     currentProcess.batchProgress = 0;
-                    currentProcessIndex = getNextProcessIndex(currentProcessIndex, processes, currentProcessIndex);
+                    currentProcessIndex = getNextProcessIndex(currentProcessIndex, processes);
                     currentProcess = processes.get(currentProcessIndex);
 
                     printRegistered(out, currentProcessIndex, currentProcess);
@@ -40,6 +40,7 @@ public class GuaranteedSchedulingAlgorithm {
                 currentProcess.batchProgress++;
                 currentRunTime++;
             }
+            printlnCompleted(out, currentProcessIndex, currentProcess);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -48,19 +49,17 @@ public class GuaranteedSchedulingAlgorithm {
     }
 
     private static int getNextProcessIndex(int defaultValue, List<Process> processes) {
-        return getNextProcessIndex(defaultValue, processes, -1);
-    }
-
-    private static int getNextProcessIndex(int defaultValue, List<Process> processes, int skipIndex) {
-        int index = defaultValue;
-        Process currentProcess;
-        for (int i = processes.size() - 1; i >= 0; i--) {
-            currentProcess = processes.get(i);
-            if (currentProcess.isActive() && i != skipIndex) {
-                index = i;
+        int result = defaultValue;
+        for (int i = 0; i < processes.size(); i++) {
+            if (processes.get(result).isFinish()) {
+                result = i;
+            }
+            if (processes.get(i).isActive() &&
+                    processes.get(i).totalProgress < processes.get(result).totalProgress) {
+                result = i;
             }
         }
-        return index;
+        return result;
     }
 
     private static void printRegistered(PrintStream out, int processIndex, Process process) {
