@@ -1,17 +1,17 @@
 package org.example.os.lab2;
 
 public class Process {
-  public int cputime;
-  public int ioblocking;
-  public int cpudone;
-  public int ionext;
-  public int numblocked;
+  public int cpu_time; // required total time
+  public int io_blocking; // batch per one time
+  public int cpu_done; // count of finished time
+  public int io_next; // count of finished in batch
+  public int num_blocked;
 
-  public Process(int cputime, int ioblocking, int cpudone, int ionext, int numblocked) {
-    this.cputime = cputime;
-    this.ioblocking = ioblocking;
-    this.cpudone = cpudone;
-    this.ionext = ionext;
-    this.numblocked = numblocked;
+  public Process(int cpu_time, int io_blocking, int cpu_done, int io_next, int num_blocked) {
+    this.cpu_time = cpu_time;
+    this.io_blocking = io_blocking;
+    this.cpu_done = cpu_done;
+    this.io_next = io_next;
+    this.num_blocked = num_blocked;
   }
 }
