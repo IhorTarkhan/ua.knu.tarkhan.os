@@ -11,7 +11,7 @@ public class GuaranteedSchedulingAlgorithm {
         int currentProcessIndex = 0;
         int currentRunTime = 0;
 
-        try (PrintStream out = new PrintStream(new FileOutputStream("Summary-Processes.csv"))) {
+        try (PrintStream out = new PrintStream(new FileOutputStream("Summary-Processes"))) {
             Process currentProcess = processes.get(currentProcessIndex);
             printRegistered(out, currentProcessIndex, currentProcess);
             while (processes.stream().anyMatch(Process::isActive)) {
@@ -59,14 +59,14 @@ public class GuaranteedSchedulingAlgorithm {
     }
 
     private static void printRegistered(PrintStream out, int processIndex, Process process) {
-        out.printf("%d,%d,%d,%d%n", processIndex, process.totalProgress, process.totalSize, process.batchSize);
+        out.println("Process: " + processIndex + " registered... (" + process.totalSize + " " + process.batchSize + " " + process.totalProgress + " " + process.totalProgress + ")");
     }
 
     private static void printlnCompleted(PrintStream out, int processIndex, Process process) {
-//        out.printf("%d,completed,%d,%d,%d,%d%n", processIndex, process.totalSize, process.batchSize, process.totalProgress, process.totalProgress);
+        out.println("Process: " + processIndex + " completed... (" + process.totalSize + " " + process.batchSize + " " + process.totalProgress + " " + process.totalProgress + ")");
     }
 
     private static void printlnBlocked(PrintStream out, int processIndex, Process process) {
-//        out.printf("%d,blocked,%d,%d,%d,%d%n", processIndex, process.totalSize, process.batchSize, process.totalProgress, process.totalProgress);
+        out.println("Process: " + processIndex + " I/O blocked... (" + process.totalSize + " " + process.batchSize + " " + process.totalProgress + " " + process.totalProgress + ")");
     }
 }
