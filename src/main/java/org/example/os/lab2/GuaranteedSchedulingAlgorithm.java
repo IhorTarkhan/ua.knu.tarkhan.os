@@ -14,7 +14,7 @@ public class GuaranteedSchedulingAlgorithm {
         try (PrintStream out = new PrintStream(new FileOutputStream("Summary-Processes"))) {
             Process currentProcess = processes.get(currentProcessIndex);
             printRegistered(out, currentProcessIndex, currentProcess);
-            while (processes.stream().anyMatch(Process::isActive)) {
+            while (maxRunTime > currentRunTime && processes.stream().anyMatch(Process::isActive)) {
                 if (currentProcess.isFinish()) {
                     printlnCompleted(out, currentProcessIndex, currentProcess);
 
