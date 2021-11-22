@@ -7,23 +7,18 @@ import java.util.StringTokenizer;
 
 public class Scheduling {
     private static final List<Process> processVector = new ArrayList<>();
-    private static int processNum = 5;
     private static int meanDev = 1000;
     private static int standardDev = 100;
     private static int runtime = 1000;
 
     private static void Init(String file) {
-        File f = new File(file);
         String line;
-        int cpuTime = 0;
-        int ioBlocking = 0;
 
-        try (DataInputStream in = new DataInputStream(new FileInputStream(f))) {
+        try (DataInputStream in = new DataInputStream(new FileInputStream(file))) {
             while ((line = in.readLine()) != null) {
                 if (line.startsWith("numprocess")) {
                     StringTokenizer st = new StringTokenizer(line);
                     st.nextToken();
-                    processNum = Integer.parseInt(st.nextToken().trim());
                 }
                 if (line.startsWith("meandev")) {
                     StringTokenizer st = new StringTokenizer(line);
@@ -38,12 +33,12 @@ public class Scheduling {
                 if (line.startsWith("process")) {
                     StringTokenizer st = new StringTokenizer(line);
                     st.nextToken();
-                    ioBlocking = Integer.parseInt(st.nextToken().trim());
+                    int ioBlocking = Integer.parseInt(st.nextToken().trim());
                     double X;
                     do {
                         X = Common.R1();
                     } while (X == -1.0);
-                    cpuTime = (int) X * standardDev + meanDev;
+                    int cpuTime = (int) X * standardDev + meanDev;
                     processVector.add(new Process(cpuTime, ioBlocking));
                 }
                 if (line.startsWith("runtime")) {
@@ -58,34 +53,15 @@ public class Scheduling {
     }
 
     public static void main(String[] args) {
-
-        if (args.length != 1) {
-            System.err.println("Usage: 'java Scheduling <INIT FILE>'");
-            System.exit(-1);
-        }
-        File f = new File(args[0]);
-        if (!(f.exists())) {
-            System.err.println("Scheduling: error, file '" + f.getName() + "' does not exist.");
-            System.exit(-1);
-        }
-        if (!(f.canRead())) {
-            System.err.println("Scheduling: error, read of " + f.getName() + " failed.");
-            System.exit(-1);
-        }
+        validate(args);
         System.out.println("Working...");
         Init(args[0]);
-        if (processVector.size() < processNum) {
-            for (int i = 0; processVector.size() < processNum; i++) {
-                double X;
-                do {
-                    X = Common.R1();
-                } while (X == -1.0);
-                int cpuTime = (int) X * standardDev + meanDev;
-                processVector.add(new Process(cpuTime, i * 100));
-
-            }
-        }
         Results result = GuaranteedSchedulingAlgorithm.run(runtime, processVector);
+        printResult(result);
+        System.out.println("Completed.");
+    }
+
+    private static void printResult(Results result) {
         try (PrintStream out = new PrintStream(new FileOutputStream("Summary-Results"))) {
             out.println("Scheduling Type: " + result.schedulingType);
             out.println("Scheduling Name: " + result.schedulingName);
@@ -124,7 +100,22 @@ public class Scheduling {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("Completed.");
+    }
+
+    private static void validate(String[] args) {
+        if (args.length != 1) {
+            System.err.println("Usage: 'java Scheduling <INIT FILE>'");
+            System.exit(-1);
+        }
+        File f = new File(args[0]);
+        if (!(f.exists())) {
+            System.err.println("Scheduling: error, file '" + f.getName() + "' does not exist.");
+            System.exit(-1);
+        }
+        if (!(f.canRead())) {
+            System.err.println("Scheduling: error, read of " + f.getName() + " failed.");
+            System.exit(-1);
+        }
     }
 }
 
