@@ -12,8 +12,7 @@ public class Common {
     }
 
     public static long randomLong(long maxValue) {
-        Random generator = new Random(System.currentTimeMillis());
-        return generator.nextLong() % maxValue;
+        return new Random(System.currentTimeMillis()).nextLong(0, maxValue);
     }
 }
 
