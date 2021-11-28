@@ -394,7 +394,7 @@ public class Kernel extends Thread
     {
       try
       {
-        Thread.sleep(2000);
+        Thread.sleep(20);
       }
       catch(InterruptedException e)
       {
