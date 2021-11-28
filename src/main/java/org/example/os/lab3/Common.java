@@ -1,60 +1,19 @@
 package org.example.os.lab3;
 
+import java.util.Random;
+
 public class Common {
-
-  static public long s2l ( String s )
-  {
-    long i = 0;
-
-    try {
-      i = Long.parseLong(s.trim());
-    } catch (NumberFormatException nfe) {
-      System.out.println("NumberFormatException: " + nfe.getMessage());
+    static public int s2i(String s) {
+        return Integer.parseInt(s.trim());
     }
 
-    return i;
-  }
-
-  static public int s2i ( String s )
-  {
-    int i = 0;
-
-    try {
-      i = Integer.parseInt(s.trim());
-    } catch (NumberFormatException nfe) {
-      System.out.println("NumberFormatException: " + nfe.getMessage());
+    static public byte s2b(String s) {
+        return Byte.parseByte(s.trim());
     }
 
-    return i;
-  }
-
-  static public byte s2b ( String s )
-  {
-    int i = 0;
-    byte b = 0;
-
-    try {
-      i = Integer.parseInt(s.trim());
-    } catch (NumberFormatException nfe) {
-      System.out.println("NumberFormatException: " + nfe.getMessage());
+    public static long randomLong(long maxValue) {
+        Random generator = new Random(System.currentTimeMillis());
+        return generator.nextLong() % maxValue;
     }
-    b = (byte) i;
-    return b;
-  }
-
-  public static long randomLong( long MAX )
-  {
-    long i = -1;
-
-    java.util.Random generator = new
-    java.util.Random(System.currentTimeMillis());
-    while (i > MAX || i < 0)
-    {
-      int intOne = generator.nextInt();
-      int intTwo = generator.nextInt();
-      i = (long) intOne + intTwo;
-    }
-    return i;
-  }
 }
 
