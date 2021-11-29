@@ -1,5 +1,6 @@
 package org.example.os.lab3;
 
+import org.example.os.lab3.domain.Config;
 import org.example.os.lab3.domain.Page;
 
 import java.awt.*;
@@ -209,8 +210,8 @@ public class ControlPanel extends Frame {
         MValueLabel.setText(Integer.toString(page.M));
         inMemTimeValueLabel.setText(Integer.toString(page.inMemTime));
         lastTouchTimeValueLabel.setText(Integer.toString(page.lastTouchTime));
-        lowValueLabel.setText(Long.toString(page.low, Kernel.addressradix));
-        highValueLabel.setText(Long.toString(page.high, Kernel.addressradix));
+        lowValueLabel.setText(Long.toString(page.low, Config.addressradix));
+        highValueLabel.setText(Long.toString(page.high, Config.addressradix));
     }
 
     public void setStatus(String status) {
