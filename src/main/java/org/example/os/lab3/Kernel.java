@@ -1,5 +1,8 @@
 package org.example.os.lab3;
 
+import org.example.os.lab3.domain.Instruction;
+import org.example.os.lab3.domain.Page;
+
 import java.lang.Thread;
 import java.io.*;
 import java.util.*;
@@ -64,7 +67,7 @@ public class Kernel extends Thread
             while (st.hasMoreTokens())
             {
               tmp = st.nextToken();
-              virtPageNum = Common.s2i(st.nextToken()) - 1;
+              virtPageNum = Integer.parseInt(st.nextToken().trim()) - 1;
               if ( virtPageNum < 2 || virtPageNum > 63 )
               {
                 System.out.println("MemoryManagement: numpages out of bounds.");
@@ -94,7 +97,7 @@ public class Kernel extends Thread
             st.nextToken();
             while (st.hasMoreTokens())
             {
-              id = Common.s2i(st.nextToken());
+              id = Integer.parseInt(st.nextToken().trim());
               tmp = st.nextToken();
               if (tmp.startsWith("x"))
               {
@@ -102,32 +105,32 @@ public class Kernel extends Thread
               }
               else
               {
-                physical = Common.s2i(tmp);
+                physical = Integer.parseInt(tmp.trim());
               }
               if ((0 > id || id > virtPageNum) || (-1 > physical || physical > ((virtPageNum - 1) / 2)))
               {
                 System.out.println("MemoryManagement: Invalid page value in " + config);
                 System.exit(-1);
               }
-              R = Common.s2b(st.nextToken());
+              R = Byte.parseByte(st.nextToken().trim());
               if (R < 0 || R > 1)
               {
                 System.out.println("MemoryManagement: Invalid R value in " + config);
                 System.exit(-1);
               }
-              M = Common.s2b(st.nextToken());
+              M = Byte.parseByte(st.nextToken().trim());
               if (M < 0 || M > 1)
               {
                  System.out.println("MemoryManagement: Invalid M value in " + config);
                  System.exit(-1);
               }
-              inMemTime = Common.s2i(st.nextToken());
+              inMemTime = Integer.parseInt(st.nextToken().trim());
               if (inMemTime < 0)
               {
                 System.out.println("MemoryManagement: Invalid inMemTime in " + config);
                 System.exit(-1);
               }
-              lastTouchTime = Common.s2i(st.nextToken());
+              lastTouchTime = Integer.parseInt(st.nextToken().trim());
               if (lastTouchTime < 0)
               {
                 System.out.println("MemoryManagement: Invalid lastTouchTime in " + config);
@@ -241,7 +244,7 @@ public class Kernel extends Thread
           tmp = st.nextToken();
           if (tmp.startsWith("random"))
           {
-            instructVector.addElement(new Instruction(command,Common.randomLong( address_limit )));
+            instructVector.addElement(new Instruction(command, new Random(System.currentTimeMillis()).nextLong(0, address_limit)));
           }
           else
           {

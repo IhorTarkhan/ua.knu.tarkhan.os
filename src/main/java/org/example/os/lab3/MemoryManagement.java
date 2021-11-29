@@ -4,24 +4,24 @@ import java.io.File;
 
 public class MemoryManagement {
     public static void main(String[] args) {
-        if (args.length < 1 || args.length > 2) {
+        if (args.length != 1 && args.length != 2) {
             throw new RuntimeException("Usage: 'java MemoryManagement <COMMAND FILE> <PROPERTIES FILE>'");
         }
 
         validateFile(args[0]);
         String commandFile = args[0];
 
-        String propertiesFile;
-        if (args.length == 2) {
-            validateFile(args[1]);
-            propertiesFile = args[1];
-        } else {
-            propertiesFile = null;
-        }
-
         ControlPanel controlPanel = new ControlPanel("Memory Management");
         Kernel kernel = new Kernel();
-        controlPanel.init(kernel, commandFile, propertiesFile);
+
+        if (args.length == 2) {
+            validateFile(args[1]);
+            controlPanel.init(kernel, commandFile, args[1]);
+        } else {
+            controlPanel.init(kernel, commandFile, null);
+
+        }
+
     }
 
     private static void validateFile(String fileSrc) {

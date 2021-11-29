@@ -1,4 +1,4 @@
-package org.example.os.lab3;
+package org.example.os.lab3.domain;
 
 public class Instruction {
     public String inst;

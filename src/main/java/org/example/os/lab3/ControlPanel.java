@@ -1,5 +1,7 @@
 package org.example.os.lab3;
 
+import org.example.os.lab3.domain.Page;
+
 import java.awt.*;
 import java.util.List;
 import java.util.stream.Collectors;

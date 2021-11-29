@@ -1,5 +1,7 @@
 package org.example.os.lab3;
 
+import org.example.os.lab3.domain.Page;
+
 import java.util.List;
 
 public class PageFault {
