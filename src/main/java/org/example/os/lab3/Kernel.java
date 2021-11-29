@@ -48,25 +48,9 @@ public class Kernel extends Thread {
                         }
 
                     });
-
             getLinesFrom("numpages", lines)
                     .findFirst()
                     .ifPresent(value -> Config.setVirtPageNum(Integer.parseInt(value[1]) - 1));
-
-            for (int i = 0; i <= Config.virtPageNum; i++) {
-                memVector.add(new Page(i));
-            }
-
-            getLinesFrom("memset", lines)
-                    .forEach(values -> {
-                        int id = Integer.parseInt(values[1]);
-                        int physical = values[2].startsWith("x") ? -1 : Integer.parseInt(values[2].trim());
-                        byte R = Byte.parseByte(values[3]);
-                        byte M = Byte.parseByte(values[4]);
-                        int inMemTime = Integer.parseInt(values[5]);
-                        int lastTouchTime = Integer.parseInt(values[6]);
-                        memVector.set(id, new Page(id, physical, R, M, inMemTime, lastTouchTime));
-                    });
             getLinesFrom("enable_logging", lines)
                     .findFirst()
                     .ifPresent(value -> {
@@ -89,6 +73,19 @@ public class Kernel extends Thread {
             getLinesFrom("addressradix", lines)
                     .findFirst()
                     .ifPresent(value -> Config.setAddressradix(Byte.parseByte(value[1])));
+            for (int i = 0; i <= Config.virtPageNum; i++) {
+                memVector.add(new Page(i));
+            }
+            getLinesFrom("memset", lines)
+                    .forEach(values -> {
+                        int id = Integer.parseInt(values[1]);
+                        int physical = values[2].startsWith("x") ? -1 : Integer.parseInt(values[2].trim());
+                        byte R = Byte.parseByte(values[3]);
+                        byte M = Byte.parseByte(values[4]);
+                        int inMemTime = Integer.parseInt(values[5]);
+                        int lastTouchTime = Integer.parseInt(values[6]);
+                        memVector.set(id, new Page(id, physical, R, M, inMemTime, lastTouchTime));
+                    });
         }
         try {
             File f = new File(commands);
