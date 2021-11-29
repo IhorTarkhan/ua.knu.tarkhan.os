@@ -10,15 +10,13 @@ public class MemoryManagement {
 
         validateFile(args[0]);
         String commandFile = args[0];
-
         ControlPanel controlPanel = new ControlPanel("Memory Management");
-        Kernel kernel = new Kernel();
 
         if (args.length == 2) {
             validateFile(args[1]);
-            controlPanel.init(kernel, commandFile, args[1]);
+            controlPanel.init(commandFile, args[1]);
         } else {
-            controlPanel.init(kernel, commandFile, null);
+            controlPanel.init(commandFile, null);
 
         }
 

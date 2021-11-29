@@ -29,15 +29,19 @@ public class ControlPanel extends Frame
   Label lastTouchTimeValueLabel = new Label("0" , Label.LEFT) ;
   Label lowValueLabel = new Label("0" , Label.LEFT) ;
   Label highValueLabel = new Label("0" , Label.LEFT) ;
+  private String commands;
+  private String config;
 
   public ControlPanel( String title )
   {
     super(title);
   }
 
-  public void init(Kernel useKernel , String commands , String config )
+  public void init(String commands, String config)
   {
-    kernel = useKernel ;
+    this.commands = commands;
+    this.config = config;
+    kernel = new Kernel() ;
     kernel.setControlPanel( this );
     setLayout( null );
     setBackground( Color.white );
@@ -237,7 +241,7 @@ public class ControlPanel extends Frame
       runButton.setEnabled(false);
       stepButton.setEnabled(false);
       resetButton.setEnabled(false);
-      kernel.run();
+      kernel.start();
       setStatus( "STOP" );
       resetButton.setEnabled(true);
       return true;
@@ -255,7 +259,9 @@ public class ControlPanel extends Frame
     }
     else if ( target == resetButton )
     {
-      kernel.reset();
+      kernel = new Kernel() ;
+      kernel.setControlPanel( this );
+      kernel.init( commands , config );
       runButton.setEnabled(true);
       stepButton.setEnabled(true);
       return true;
