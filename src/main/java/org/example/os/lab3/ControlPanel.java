@@ -273,7 +273,7 @@ public class ControlPanel extends Frame {
             return true;
         }
         if (buttons.contains(target)) {
-            paintPage(kernel.memVector.get(buttons.indexOf(target)));
+            paintPage(kernel.getPage(buttons.indexOf(target)));
             return true;
         }
         return false;
