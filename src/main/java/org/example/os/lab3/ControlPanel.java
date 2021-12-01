@@ -39,8 +39,6 @@ public class ControlPanel extends Frame {
     public void init(String commands, String config) {
         this.commands = commands;
         this.config = config;
-        kernel = new Kernel();
-        kernel.setControlPanel(this);
         setLayout(null);
         setBackground(Color.white);
         setForeground(Color.black);
@@ -198,8 +196,7 @@ public class ControlPanel extends Frame {
                 })
                 .collect(Collectors.toList());
 
-        kernel.init(commands, config);
-
+        kernel = new Kernel(this, commands, config);
         setVisible(true);
     }
 
@@ -226,6 +223,23 @@ public class ControlPanel extends Frame {
         labels.get(physicalPage).setText(null);
     }
 
+    public void reset() {
+        statusValueLabel.setText("STOP");
+        timeValueLabel.setText("0");
+        instructionValueLabel.setText("NONE");
+        addressValueLabel.setText("NULL");
+        pageFaultValueLabel.setText("NO");
+        virtualPageValueLabel.setText("x");
+        physicalPageValueLabel.setText("0");
+        RValueLabel.setText("0");
+        MValueLabel.setText("0");
+        inMemTimeValueLabel.setText("0");
+        lastTouchTimeValueLabel.setText("0");
+        lowValueLabel.setText("0");
+        highValueLabel.setText("0");
+        runButton.setEnabled(true);
+        stepButton.setEnabled(true);
+    }
 
     public boolean action(Event e, Object arg) {
         Button target = (Button) e.target;
@@ -238,7 +252,8 @@ public class ControlPanel extends Frame {
             setStatus("STOP");
             resetButton.setEnabled(true);
             return true;
-        } else if (target == stepButton) {
+        }
+        if (target == stepButton) {
             setStatus("STEP");
             kernel.step();
             if (kernel.runcycles == kernel.runs) {
@@ -247,21 +262,18 @@ public class ControlPanel extends Frame {
             }
             setStatus("STOP");
             return true;
-        } else if (target == resetButton) {
-            kernel = new Kernel();
-            kernel.setControlPanel(this);
-            kernel.init(commands, config);
-            kernel.reset();
-            runButton.setEnabled(true);
-            stepButton.setEnabled(true);
+        }
+        if (target == resetButton) {
+            kernel = new Kernel(this, commands, config);
+            reset();
             return true;
-        } else if (target == exitButton) {
+        }
+        if (target == exitButton) {
             System.exit(0);
             return true;
         }
-
         if (buttons.contains(target)) {
-            kernel.getPage(buttons.indexOf(target));
+            paintPage(kernel.memVector.get(buttons.indexOf(target)));
             return true;
         }
         return false;

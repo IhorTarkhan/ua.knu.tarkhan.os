@@ -16,21 +16,15 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Kernel extends Thread {
-    private final List<Page> memVector = new ArrayList<>();
+    public final List<Page> memVector = new ArrayList<>();
     private final List<Instruction> instructVector = new ArrayList<>();
+    private final ControlPanel controlPanel;
     public int runs;
     public int runcycles;
-    ///
-    private String command_file;
-    private String config_file;
-    ///
-    private ControlPanel controlPanel;
 
     @SneakyThrows
-    public void init(String commands, String config) {
-        command_file = commands;
-        config_file = config;
-
+    public Kernel(ControlPanel controlPanel, String commands, String config) {
+        this.controlPanel = controlPanel;
         if (config != null) {
             List<String> lines = Files.lines(Paths.get(config)).collect(Collectors.toList());
 
@@ -179,15 +173,6 @@ public class Kernel extends Thread {
                 .map(line -> line.split("[ \t\n\r\f]"));
     }
 
-    public void setControlPanel(ControlPanel newControlPanel) {
-        controlPanel = newControlPanel;
-    }
-
-    public void getPage(int pageNum) {
-        Page page = memVector.get(pageNum);
-        controlPanel.paintPage(page);
-    }
-
     private void printLogFile(String message) {
         String line;
         StringBuilder temp = new StringBuilder();
@@ -226,7 +211,7 @@ public class Kernel extends Thread {
         Instruction instruct = instructVector.get(runs);
         controlPanel.instructionValueLabel.setText(instruct.inst);
         controlPanel.addressValueLabel.setText(Long.toString(instruct.addr, Config.addressradix));
-        getPage(Virtual2Physical.pageNum(instruct.addr, Config.virtPageNum, Config.block));
+        controlPanel.paintPage(memVector.get(Virtual2Physical.pageNum(instruct.addr, Config.virtPageNum, Config.block)));
         if ("YES".equals(controlPanel.pageFaultValueLabel.getText())) {
             controlPanel.pageFaultValueLabel.setText("NO");
         }
@@ -286,24 +271,5 @@ public class Kernel extends Thread {
         }
         runs++;
         controlPanel.timeValueLabel.setText(runs * 10 + " (ns)");
-    }
-
-    public void reset() {
-        memVector.clear();
-        instructVector.clear();
-        controlPanel.statusValueLabel.setText("STOP");
-        controlPanel.timeValueLabel.setText("0");
-        controlPanel.instructionValueLabel.setText("NONE");
-        controlPanel.addressValueLabel.setText("NULL");
-        controlPanel.pageFaultValueLabel.setText("NO");
-        controlPanel.virtualPageValueLabel.setText("x");
-        controlPanel.physicalPageValueLabel.setText("0");
-        controlPanel.RValueLabel.setText("0");
-        controlPanel.MValueLabel.setText("0");
-        controlPanel.inMemTimeValueLabel.setText("0");
-        controlPanel.lastTouchTimeValueLabel.setText("0");
-        controlPanel.lowValueLabel.setText("0");
-        controlPanel.highValueLabel.setText("0");
-        init(command_file, config_file);
     }
 }
