@@ -16,8 +16,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Kernel extends Thread {
-    public static final String UNIVERSAL_DELIMITERS = "[ \t\n\r\f]";
-    ///
     private final List<Page> memVector = new ArrayList<>();
     private final List<Instruction> instructVector = new ArrayList<>();
     public int runs;
@@ -39,12 +37,11 @@ public class Kernel extends Thread {
             getLinesFrom("pagesize", lines)
                     .findFirst()
                     .ifPresent(value -> {
-                        String tmp = value[1];
-                        if (tmp.startsWith("power")) {
+                        if (value[1].startsWith("power")) {
                             int power = Integer.parseInt(value[2]);
                             Config.setBlock((int) Math.pow(2, power));
                         } else {
-                            Config.setBlock(Long.parseLong(tmp, 10));
+                            Config.setBlock(Long.parseLong(value[1], 10));
                         }
 
                     });
@@ -179,7 +176,7 @@ public class Kernel extends Thread {
     private Stream<String[]> getLinesFrom(String key, List<String> lines) {
         return lines.stream()
                 .filter(line -> line.startsWith(key))
-                .map(line -> line.split(UNIVERSAL_DELIMITERS));
+                .map(line -> line.split("[ \t\n\r\f]"));
     }
 
     public void setControlPanel(ControlPanel newControlPanel) {

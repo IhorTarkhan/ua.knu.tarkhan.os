@@ -4,6 +4,8 @@ import org.example.os.lab3.domain.Page;
 
 import java.util.List;
 
+import static java.util.Comparator.comparingInt;
+
 public class PageFault {
 
     /**
@@ -45,41 +47,22 @@ public class PageFault {
      *                       simulator, and allows one to modify the current display.
      */
     public static void replacePage(List<Page> mem, int virtPageNum, int replacePageNum, ControlPanel controlPanel) {
-        int count = 0;
-        int oldestPage = -1;
-        int oldestTime = 0;
-        int firstPage = -1;
-        boolean mapped = false;
+        Page oldest = mem.stream()
+                .limit(virtPageNum)
+                .filter(page -> page.physical != -1)
+                .max(comparingInt(p -> p.inMemTime))
+                .orElse(mem.get(0));
+        int oldestPage = mem.indexOf(oldest);
 
-        while (!mapped || count != virtPageNum) {
-            Page page = mem.get(count);
-            if (page.physical != -1) {
-                if (firstPage == -1) {
-                    firstPage = count;
-                }
-                if (page.inMemTime > oldestTime) {
-                    oldestTime = page.inMemTime;
-                    oldestPage = count;
-                    mapped = true;
-                }
-            }
-            count++;
-            if (count == virtPageNum) {
-                mapped = true;
-            }
-        }
-        if (oldestPage == -1) {
-            oldestPage = firstPage;
-        }
-        Page page = mem.get(oldestPage);
         Page nextpage = mem.get(replacePageNum);
         controlPanel.removePhysicalPage(oldestPage);
-        nextpage.physical = page.physical;
+        nextpage.physical = oldest.physical;
         controlPanel.addPhysicalPage(nextpage.physical, replacePageNum);
-        page.inMemTime = 0;
-        page.lastTouchTime = 0;
-        page.R = 0;
-        page.M = 0;
-        page.physical = -1;
+        oldest.inMemTime = 0;
+        oldest.lastTouchTime = 0;
+        oldest.R = 0;
+        oldest.M = 0;
+        oldest.physical = -1;
     }
+
 }
