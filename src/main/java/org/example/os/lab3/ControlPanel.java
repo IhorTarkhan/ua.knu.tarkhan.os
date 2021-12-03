@@ -196,7 +196,7 @@ public class ControlPanel extends Frame {
                 })
                 .collect(Collectors.toList());
 
-        kernel = new Kernel(this, commands, config);
+        kernel = new Kernel(this, config, commands);
         setVisible(true);
     }
 
@@ -256,7 +256,7 @@ public class ControlPanel extends Frame {
         if (target == stepButton) {
             setStatus("STEP");
             kernel.step();
-            if (kernel.runcycles == kernel.runs) {
+            if (kernel.isRunFinished()) {
                 stepButton.setEnabled(false);
                 runButton.setEnabled(false);
             }
@@ -264,7 +264,7 @@ public class ControlPanel extends Frame {
             return true;
         }
         if (target == resetButton) {
-            kernel = new Kernel(this, commands, config);
+            kernel = new Kernel(this, config, commands);
             reset();
             return true;
         }

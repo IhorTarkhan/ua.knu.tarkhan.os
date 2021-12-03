@@ -5,11 +5,13 @@ import org.example.os.lab3.domain.Config;
 import org.example.os.lab3.domain.Instruction;
 import org.example.os.lab3.domain.Page;
 
-import java.io.*;
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Stream;
 
@@ -17,24 +19,15 @@ public class Kernel extends Thread {
     private final List<Page> memVector = new ArrayList<>();
     private final List<Instruction> instructions = new ArrayList<>();
     private final ControlPanel controlPanel;
-    public int runs;
-    public int runcycles;
+    private int step;
 
-    public Kernel(ControlPanel controlPanel, String commands, String config) {
+    public Kernel(ControlPanel controlPanel, String config, String commands) {
         this.controlPanel = controlPanel;
         if (config != null) {
             configInit(config);
         }
         commandsInit(commands);
-        runcycles = instructions.size();
-        if (runcycles < 1) {
-            throw new RuntimeException("MemoryManagement: no instructions present for execution.");
-        }
-        if (Config.doFileLog) {
-            File trace = new File(Config.output);
-            trace.delete();
-        }
-        runs = 0;
+        step = 0;
         int map_count = 0;
         for (int i = 0; i < Config.virtPageNum; i++) {
             Page page = memVector.get(i);
@@ -70,8 +63,8 @@ public class Kernel extends Thread {
             }
         }
         for (Instruction instruction : instructions) {
-            if (instruction.addr() < 0 || instruction.addr() > Config.getAddressLimit()) {
-                throw new RuntimeException("MemoryManagement: Instruction (" + instruction.inst() + " " + instruction.addr() + ") out of bounds.");
+            if (instruction.address() < 0 || instruction.address() > Config.getAddressLimit()) {
+                throw new RuntimeException("MemoryManagement: Instruction (" + instruction.inst() + " " + instruction.address() + ") out of bounds.");
             }
         }
     }
@@ -80,42 +73,58 @@ public class Kernel extends Thread {
     private void configInit(String config) {
         List<String> lines = Files.lines(Paths.get(config)).toList();
 
-        getLinesFrom("pagesize", lines)
+        long block = getLinesFrom("pagesize", lines)
                 .findFirst()
-                .ifPresent(value -> {
+                .map(value -> {
                     if (value[1].startsWith("power")) {
                         int power = Integer.parseInt(value[2]);
-                        Config.setBlock((int) Math.pow(2, power));
+                        return (long) Math.pow(2, power);
                     } else {
-                        Config.setBlock(Long.parseLong(value[1], 10));
+                        return Long.parseLong(value[1], 10);
                     }
 
-                });
-        getLinesFrom("numpages", lines)
+                }).orElse((long) Math.pow(2, 12));
+        int virtPageNum = getLinesFrom("numpages", lines)
                 .findFirst()
-                .ifPresent(value -> Config.setVirtPageNum(Integer.parseInt(value[1]) - 1));
-        getLinesFrom("enable_logging", lines)
+                .map(value -> Integer.parseInt(value[1]) - 1)
+                .orElse(63);
+        Optional<String[]> enableLogging = getLinesFrom("enable_logging", lines)
+                .findFirst();
+        boolean doStdoutLog = enableLogging.isPresent() && enableLogging.get()[1].startsWith("true");
+        Optional<String[]> logFile = getLinesFrom("log_file", lines).findFirst();
+
+        boolean doFileLog;
+        String output;
+        if (logFile.isPresent()) {
+            if (logFile.get()[1].startsWith("log_file")) {
+                doFileLog = false;
+                output = "tracefile";
+            } else {
+                doFileLog = true;
+                doStdoutLog = false;
+                output = logFile.get()[1];
+            }
+        } else {
+            doFileLog = false;
+            doStdoutLog = false;
+            output = null;
+        }
+        Optional<Byte> addressradixOptional = getLinesFrom("addressradix", lines)
                 .findFirst()
-                .ifPresent(value -> {
-                    if (value[1].startsWith("true")) {
-                        Config.doStdoutLog = true;
-                    }
-                });
-        getLinesFrom("log_file", lines)
-                .findFirst()
-                .ifPresent(value -> {
-                    if (value[1].startsWith("log_file")) {
-                        Config.doFileLog = false;
-                        Config.output = "tracefile";
-                    } else {
-                        Config.doFileLog = true;
-                        Config.doStdoutLog = false;
-                        Config.output = value[1];
-                    }
-                });
-        getLinesFrom("addressradix", lines)
-                .findFirst()
-                .ifPresent(value -> Config.setAddressradix(Byte.parseByte(value[1])));
+                .map(value -> Byte.parseByte(value[1]));
+        byte addressradix;
+        if (addressradixOptional.isPresent()) {
+            addressradix = addressradixOptional.get();
+        } else {
+            addressradix = 10;
+        }
+        Config.setBlock(block);
+        Config.setVirtPageNum(virtPageNum);
+        Config.doStdoutLog = doStdoutLog;
+        Config.doFileLog = doFileLog;
+        Config.output = output;
+        Config.setAddressradix(addressradix);
+
         for (int i = 0; i <= Config.virtPageNum; i++) {
             memVector.add(new Page(i));
         }
@@ -157,6 +166,9 @@ public class Kernel extends Thread {
                         instructions.add(new Instruction(command, address));
                     }
                 });
+        if (instructions.size() < 1) {
+            throw new RuntimeException("MemoryManagement: no instructions present for execution.");
+        }
     }
 
     private Stream<String[]> getLinesFrom(String key, List<String> lines) {
@@ -169,30 +181,16 @@ public class Kernel extends Thread {
         return memVector.get(index);
     }
 
-    private void printLogFile(String message) {
-        String line;
-        StringBuilder temp = new StringBuilder();
+    public boolean isRunFinished() {
+        return step == instructions.size();
+    }
 
-        File trace = new File(Config.output);
-        if (trace.exists()) {
-            try {
-                DataInputStream in = new DataInputStream(new FileInputStream(Config.output));
-                while ((line = in.readLine()) != null) {
-                    temp.append(line).append(System.lineSeparator());
-                }
-                in.close();
-            } catch (IOException e) {
-                /* Do nothing */
-            }
+    @SneakyThrows
+    private void printLogFile(String message) {
+        if (!new File(Config.output).exists()) {
+            new File(Config.output).createNewFile();
         }
-        try {
-            PrintStream out = new PrintStream(new FileOutputStream(Config.output));
-            out.print(temp);
-            out.print(message);
-            out.close();
-        } catch (IOException e) {
-            /* Do nothing */
-        }
+        Files.write(Paths.get(Config.output), (message + System.lineSeparator()).getBytes(), StandardOpenOption.APPEND);
     }
 
     @SneakyThrows
@@ -200,58 +198,58 @@ public class Kernel extends Thread {
         do {
             Thread.sleep(20);
             step();
-        } while (runs != runcycles);
+        } while (step != instructions.size());
     }
 
     public void step() {
-        Instruction instruct = instructions.get(runs);
+        Instruction instruct = instructions.get(step);
         controlPanel.instructionValueLabel.setText(instruct.inst());
-        controlPanel.addressValueLabel.setText(Long.toString(instruct.addr(), Config.addressradix));
-        controlPanel.paintPage(memVector.get(Virtual2Physical.pageNum(instruct.addr(), Config.virtPageNum, Config.block)));
+        controlPanel.addressValueLabel.setText(Long.toString(instruct.address(), Config.addressradix));
+        controlPanel.paintPage(memVector.get(Virtual2Physical.pageNum(instruct.address(), Config.virtPageNum, Config.block)));
         if ("YES".equals(controlPanel.pageFaultValueLabel.getText())) {
             controlPanel.pageFaultValueLabel.setText("NO");
         }
         if (instruct.inst().startsWith("READ")) {
-            Page page = memVector.get(Virtual2Physical.pageNum(instruct.addr(), Config.virtPageNum, Config.block));
+            Page page = memVector.get(Virtual2Physical.pageNum(instruct.address(), Config.virtPageNum, Config.block));
             if (page.physical == -1) {
                 if (Config.doFileLog) {
-                    printLogFile("READ " + Long.toString(instruct.addr(), Config.addressradix) + " ... page fault");
+                    printLogFile("READ " + Long.toString(instruct.address(), Config.addressradix) + " ... page fault");
                 }
                 if (Config.doStdoutLog) {
-                    System.out.println("READ " + Long.toString(instruct.addr(), Config.addressradix) + " ... page fault");
+                    System.out.println("READ " + Long.toString(instruct.address(), Config.addressradix) + " ... page fault");
                 }
-                PageFault.replacePage(memVector, Config.virtPageNum, Virtual2Physical.pageNum(instruct.addr(), Config.virtPageNum, Config.block), controlPanel);
+                PageFault.replacePage(memVector, Config.virtPageNum, Virtual2Physical.pageNum(instruct.address(), Config.virtPageNum, Config.block), controlPanel);
                 controlPanel.pageFaultValueLabel.setText("YES");
             } else {
                 page.R = 1;
                 page.lastTouchTime = 0;
                 if (Config.doFileLog) {
-                    printLogFile("READ " + Long.toString(instruct.addr(), Config.addressradix) + " ... okay");
+                    printLogFile("READ " + Long.toString(instruct.address(), Config.addressradix) + " ... okay");
                 }
                 if (Config.doStdoutLog) {
-                    System.out.println("READ " + Long.toString(instruct.addr(), Config.addressradix) + " ... okay");
+                    System.out.println("READ " + Long.toString(instruct.address(), Config.addressradix) + " ... okay");
                 }
             }
         }
         if (instruct.inst().startsWith("WRITE")) {
-            Page page = memVector.get(Virtual2Physical.pageNum(instruct.addr(), Config.virtPageNum, Config.block));
+            Page page = memVector.get(Virtual2Physical.pageNum(instruct.address(), Config.virtPageNum, Config.block));
             if (page.physical == -1) {
                 if (Config.doFileLog) {
-                    printLogFile("WRITE " + Long.toString(instruct.addr(), Config.addressradix) + " ... page fault");
+                    printLogFile("WRITE " + Long.toString(instruct.address(), Config.addressradix) + " ... page fault");
                 }
                 if (Config.doStdoutLog) {
-                    System.out.println("WRITE " + Long.toString(instruct.addr(), Config.addressradix) + " ... page fault");
+                    System.out.println("WRITE " + Long.toString(instruct.address(), Config.addressradix) + " ... page fault");
                 }
-                PageFault.replacePage(memVector, Config.virtPageNum, Virtual2Physical.pageNum(instruct.addr(), Config.virtPageNum, Config.block), controlPanel);
+                PageFault.replacePage(memVector, Config.virtPageNum, Virtual2Physical.pageNum(instruct.address(), Config.virtPageNum, Config.block), controlPanel);
                 controlPanel.pageFaultValueLabel.setText("YES");
             } else {
                 page.M = 1;
                 page.lastTouchTime = 0;
                 if (Config.doFileLog) {
-                    printLogFile("WRITE " + Long.toString(instruct.addr(), Config.addressradix) + " ... okay");
+                    printLogFile("WRITE " + Long.toString(instruct.address(), Config.addressradix) + " ... okay");
                 }
                 if (Config.doStdoutLog) {
-                    System.out.println("WRITE " + Long.toString(instruct.addr(), Config.addressradix) + " ... okay");
+                    System.out.println("WRITE " + Long.toString(instruct.address(), Config.addressradix) + " ... okay");
                 }
             }
         }
@@ -265,7 +263,7 @@ public class Kernel extends Thread {
                 page.lastTouchTime = page.lastTouchTime + 10;
             }
         }
-        runs++;
-        controlPanel.timeValueLabel.setText(runs * 10 + " (ns)");
+        step++;
+        controlPanel.timeValueLabel.setText(step * 10 + " (ns)");
     }
 }
