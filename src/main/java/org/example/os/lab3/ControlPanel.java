@@ -207,8 +207,8 @@ public class ControlPanel extends Frame {
         MValueLabel.setText(Integer.toString(page.M));
         inMemTimeValueLabel.setText(Integer.toString(page.inMemTime));
         lastTouchTimeValueLabel.setText(Integer.toString(page.lastTouchTime));
-        lowValueLabel.setText(Long.toString(page.low, Config.addressradix));
-        highValueLabel.setText(Long.toString(page.high, Config.addressradix));
+        lowValueLabel.setText(Long.toString(page.low, kernel.getAddressRadix()));
+        highValueLabel.setText(Long.toString(page.high, kernel.getAddressRadix()));
     }
 
     public void setStatus(String status) {

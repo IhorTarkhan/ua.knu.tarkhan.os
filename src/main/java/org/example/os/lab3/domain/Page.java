@@ -7,36 +7,34 @@ public class Page {
     public byte M;
     public int inMemTime;
     public int lastTouchTime;
-    public long high;
-    public long low;
+    public final long high;
+    public final long low;
 
-    public Page(int id) {
+    public Page(int id, long high, long low) {
         this.id = id;
         this.physical = -1;
         this.R = 0;
         this.M = 0;
         this.inMemTime = 0;
         this.lastTouchTime = 0;
-        this.high = (Config.block * (id + 1)) - 1;
-        this.low = Config.block * id;
+        this.high = high;
+        this.low = low;
+
     }
 
-    public Page(int id, int physical, byte R, byte M, int inMemTime, int lastTouchTime) {
-        validate(id, physical, R, M, inMemTime, lastTouchTime);
+    public Page(int id, int physical, byte R, byte M, int inMemTime, int lastTouchTime, long high, long low) {
+        validate(R, M, inMemTime, lastTouchTime);
         this.id = id;
         this.physical = physical;
         this.R = R;
         this.M = M;
         this.inMemTime = inMemTime;
         this.lastTouchTime = lastTouchTime;
-        this.high = (Config.block * (id + 1)) - 1;
-        this.low = Config.block * id;
+        this.high = high;
+        this.low = low;
     }
 
-    private void validate(int id, int physical, byte R, byte M, int inMemTime, int lastTouchTime) {
-        if ((0 > id || id > Config.virtPageNum) || (-1 > physical || physical > ((Config.virtPageNum - 1) / 2))) {
-            throw new RuntimeException("MemoryManagement: Invalid page value in config file");
-        }
+    private void validate(byte R, byte M, int inMemTime, int lastTouchTime) {
         if (R < 0 || R > 1) {
             throw new RuntimeException("MemoryManagement: Invalid R value in config file");
         }
