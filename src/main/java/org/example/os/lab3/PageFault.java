@@ -43,10 +43,9 @@ public class PageFault {
      *                       simulator (set in Kernel.java).
      * @param replacePageNum is the requested page which caused the
      *                       page fault.
-     * @param controlPanel   represents the graphical element of the
-     *                       simulator, and allows one to modify the current display.
+     * @param kernel         allows one to modify the current display.
      */
-    public static void replacePage(List<Page> mem, int virtPageNum, int replacePageNum, ControlPanel controlPanel) {
+    public static void replacePage(List<Page> mem, int virtPageNum, int replacePageNum, Kernel kernel) {
         Page oldest = mem.stream()
                 .limit(virtPageNum)
                 .filter(page -> page.physical != -1)
@@ -55,9 +54,9 @@ public class PageFault {
         int oldestPage = mem.indexOf(oldest);
 
         Page nextpage = mem.get(replacePageNum);
-        controlPanel.removePhysicalPage(oldestPage);
+        kernel.removePhysicalPage(oldestPage);
         nextpage.physical = oldest.physical;
-        controlPanel.addPhysicalPage(nextpage.physical, replacePageNum);
+        kernel.addPhysicalPage(nextpage.physical, replacePageNum);
         oldest.inMemTime = 0;
         oldest.lastTouchTime = 0;
         oldest.R = 0;

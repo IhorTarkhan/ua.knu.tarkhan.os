@@ -20,13 +20,13 @@ public class Kernel extends Thread {
     private final List<Instruction> instructions = new ArrayList<>();
     private final ControlPanel controlPanel;
     private final Config config;
-    private int step;
+    private int step = 0;
 
     public Kernel(ControlPanel controlPanel, String configFile, String commands) {
         this.controlPanel = controlPanel;
+        this.controlPanel.reset();
         this.config = configInit(configFile);
         commandsInit(commands);
-        step = 0;
         int map_count = 0;
         for (int i = 0; i < config.getVirtualPageNum(); i++) {
             Page page = memVector.get(i);
@@ -56,9 +56,9 @@ public class Kernel extends Thread {
         for (int i = 0; i < config.getVirtualPageNum(); i++) {
             Page page = memVector.get(i);
             if (page.physical == -1) {
-                controlPanel.removePhysicalPage(i);
+                removePhysicalPage(i);
             } else {
-                controlPanel.addPhysicalPage(i, page.physical);
+                addPhysicalPage(i, page.physical);
             }
         }
         for (Instruction instruction : instructions) {
@@ -189,27 +189,59 @@ public class Kernel extends Thread {
         return step == instructions.size();
     }
 
+    public void paintPage(Page page) {
+        controlPanel.virtualPageValueLabel.setText(Integer.toString(page.id));
+        controlPanel.physicalPageValueLabel.setText(Integer.toString(page.physical));
+        controlPanel.RValueLabel.setText(Integer.toString(page.R));
+        controlPanel.MValueLabel.setText(Integer.toString(page.M));
+        controlPanel.inMemTimeValueLabel.setText(Integer.toString(page.inMemTime));
+        controlPanel.lastTouchTimeValueLabel.setText(Integer.toString(page.lastTouchTime));
+        controlPanel.lowValueLabel.setText(Long.toString(page.low, getAddressRadix()));
+        controlPanel.highValueLabel.setText(Long.toString(page.high, getAddressRadix()));
+    }
+
+    public void setStatus(String status) {
+        controlPanel.statusValueLabel.setText(status);
+    }
+
+    public void addPhysicalPage(int pageNum, int physicalPage) {
+        controlPanel.labels.get(physicalPage).setText("page " + pageNum);
+    }
+
+    public void removePhysicalPage(int physicalPage) {
+        controlPanel.labels.get(physicalPage).setText(null);
+    }
+
+
     @SneakyThrows
     private void printLogFile(String message) {
         if (!new File(config.getOutput()).exists()) {
-            new File(config.getOutput()).createNewFile();
+            boolean newFile = new File(config.getOutput()).createNewFile();
+            System.out.println(newFile ? "Created new log file " + config.getOutput() : "can not create new log file " + config.getOutput());
         }
         Files.write(Paths.get(config.getOutput()), (message + System.lineSeparator()).getBytes(), StandardOpenOption.APPEND);
     }
 
-    @SneakyThrows
     public void run() {
+        setStatus("RUN");
+        controlPanel.runButton.setEnabled(false);
+        controlPanel.stepButton.setEnabled(false);
+        controlPanel.resetButton.setEnabled(false);
         do {
-            Thread.sleep(20);
-            step();
+            step(true);
         } while (step != instructions.size());
+        setStatus("STOP");
+        controlPanel.resetButton.setEnabled(true);
     }
 
-    public void step() {
+    @SneakyThrows
+    public void step(boolean isRun) {
+        setStatus(isRun ? "RUN" : "STEP");
+        Thread.sleep(20);
         Instruction instruct = instructions.get(step);
         controlPanel.instructionValueLabel.setText(instruct.inst());
         controlPanel.addressValueLabel.setText(Long.toString(instruct.address(), config.getAddressRadix()));
-        controlPanel.paintPage(memVector.get(Virtual2Physical.pageNum(instruct.address(), config.getVirtualPageNum(), config.getBlock())));
+        paintPage(memVector.get(Virtual2Physical.pageNum(instruct.address(), config.getVirtualPageNum(), config.getBlock())));
         if ("YES".equals(controlPanel.pageFaultValueLabel.getText())) {
             controlPanel.pageFaultValueLabel.setText("NO");
         }
@@ -222,7 +254,7 @@ public class Kernel extends Thread {
                 if (config.isDoStdoutLog()) {
                     System.out.println("READ " + Long.toString(instruct.address(), config.getAddressRadix()) + " ... page fault");
                 }
-                PageFault.replacePage(memVector, config.getVirtualPageNum(), Virtual2Physical.pageNum(instruct.address(), config.getVirtualPageNum(), config.getBlock()), controlPanel);
+                PageFault.replacePage(memVector, config.getVirtualPageNum(), Virtual2Physical.pageNum(instruct.address(), config.getVirtualPageNum(), config.getBlock()), this);
                 controlPanel.pageFaultValueLabel.setText("YES");
             } else {
                 page.R = 1;
@@ -244,7 +276,7 @@ public class Kernel extends Thread {
                 if (config.isDoStdoutLog()) {
                     System.out.println("WRITE " + Long.toString(instruct.address(), config.getAddressRadix()) + " ... page fault");
                 }
-                PageFault.replacePage(memVector, config.getVirtualPageNum(), Virtual2Physical.pageNum(instruct.address(), config.getVirtualPageNum(), config.getBlock()), controlPanel);
+                PageFault.replacePage(memVector, config.getVirtualPageNum(), Virtual2Physical.pageNum(instruct.address(), config.getVirtualPageNum(), config.getBlock()), this);
                 controlPanel.pageFaultValueLabel.setText("YES");
             } else {
                 page.M = 1;
@@ -269,5 +301,12 @@ public class Kernel extends Thread {
         }
         step++;
         controlPanel.timeValueLabel.setText(step * 10 + " (ns)");
+
+
+        if (isRunFinished()) {
+            controlPanel.stepButton.setEnabled(false);
+            controlPanel.runButton.setEnabled(false);
+        }
+        setStatus("STOP");
     }
 }

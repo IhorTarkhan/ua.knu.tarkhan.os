@@ -1,49 +1,44 @@
 package org.example.os.lab3;
 
-import org.example.os.lab3.domain.Config;
-import org.example.os.lab3.domain.Page;
-
 import java.awt.*;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class ControlPanel extends Frame {
-    Kernel kernel;
-    Button runButton = new Button("run");
-    Button stepButton = new Button("step");
-    Button resetButton = new Button("reset");
-    Button exitButton = new Button("exit");
-    List<Button> buttons;
-    List<Label> labels;
-    Label statusValueLabel = new Label("STOP", Label.LEFT);
-    Label timeValueLabel = new Label("0", Label.LEFT);
-    Label instructionValueLabel = new Label("NONE", Label.LEFT);
-    Label addressValueLabel = new Label("NULL", Label.LEFT);
-    Label pageFaultValueLabel = new Label("NO", Label.LEFT);
-    Label virtualPageValueLabel = new Label("x", Label.LEFT);
-    Label physicalPageValueLabel = new Label("0", Label.LEFT);
-    Label RValueLabel = new Label("0", Label.LEFT);
-    Label MValueLabel = new Label("0", Label.LEFT);
-    Label inMemTimeValueLabel = new Label("0", Label.LEFT);
-    Label lastTouchTimeValueLabel = new Label("0", Label.LEFT);
-    Label lowValueLabel = new Label("0", Label.LEFT);
-    Label highValueLabel = new Label("0", Label.LEFT);
-    private String commands;
-    private String config;
+    public final Button runButton = new Button("run");
+    public final Button stepButton = new Button("step");
+    public final Button resetButton = new Button("reset");
+    public final Button exitButton = new Button("exit");
+    public final List<Button> buttons;
+    public final List<Label> labels;
+    public final Label statusValueLabel = new Label("STOP", Label.LEFT);
+    public final Label timeValueLabel = new Label("0", Label.LEFT);
+    public final Label instructionValueLabel = new Label("NONE", Label.LEFT);
+    public final Label addressValueLabel = new Label("NULL", Label.LEFT);
+    public final Label pageFaultValueLabel = new Label("NO", Label.LEFT);
+    public final Label virtualPageValueLabel = new Label("x", Label.LEFT);
+    public final Label physicalPageValueLabel = new Label("0", Label.LEFT);
+    public final Label RValueLabel = new Label("0", Label.LEFT);
+    public final Label MValueLabel = new Label("0", Label.LEFT);
+    public final Label inMemTimeValueLabel = new Label("0", Label.LEFT);
+    public final Label lastTouchTimeValueLabel = new Label("0", Label.LEFT);
+    public final Label lowValueLabel = new Label("0", Label.LEFT);
+    public final Label highValueLabel = new Label("0", Label.LEFT);
+    private final String commands;
+    private final String config;
+    private Kernel kernel;
 
-    public ControlPanel(String title) {
+    public ControlPanel(String title, String commands, String config) {
         super(title);
-    }
-
-    public void init(String commands, String config) {
-        this.commands = commands;
-        this.config = config;
         setLayout(null);
         setBackground(Color.white);
         setForeground(Color.black);
         setSize(635, 545);
         setFont(new Font("Courier", Font.PLAIN, 12));
+
+        this.commands = commands;
+        this.config = config;
 
         runButton.setForeground(Color.blue);
         runButton.setBackground(Color.lightGray);
@@ -200,28 +195,6 @@ public class ControlPanel extends Frame {
         setVisible(true);
     }
 
-    public void paintPage(Page page) {
-        virtualPageValueLabel.setText(Integer.toString(page.id));
-        physicalPageValueLabel.setText(Integer.toString(page.physical));
-        RValueLabel.setText(Integer.toString(page.R));
-        MValueLabel.setText(Integer.toString(page.M));
-        inMemTimeValueLabel.setText(Integer.toString(page.inMemTime));
-        lastTouchTimeValueLabel.setText(Integer.toString(page.lastTouchTime));
-        lowValueLabel.setText(Long.toString(page.low, kernel.getAddressRadix()));
-        highValueLabel.setText(Long.toString(page.high, kernel.getAddressRadix()));
-    }
-
-    public void setStatus(String status) {
-        statusValueLabel.setText(status);
-    }
-
-    public void addPhysicalPage(int pageNum, int physicalPage) {
-        labels.get(physicalPage).setText("page " + pageNum);
-    }
-
-    public void removePhysicalPage(int physicalPage) {
-        labels.get(physicalPage).setText(null);
-    }
 
     public void reset() {
         statusValueLabel.setText("STOP");
@@ -244,28 +217,15 @@ public class ControlPanel extends Frame {
     public boolean action(Event e, Object arg) {
         Button target = (Button) e.target;
         if (target == runButton) {
-            setStatus("RUN");
-            runButton.setEnabled(false);
-            stepButton.setEnabled(false);
-            resetButton.setEnabled(false);
             kernel.start();
-            setStatus("STOP");
-            resetButton.setEnabled(true);
             return true;
         }
         if (target == stepButton) {
-            setStatus("STEP");
-            kernel.step();
-            if (kernel.isRunFinished()) {
-                stepButton.setEnabled(false);
-                runButton.setEnabled(false);
-            }
-            setStatus("STOP");
+            kernel.step(false);
             return true;
         }
         if (target == resetButton) {
             kernel = new Kernel(this, config, commands);
-            reset();
             return true;
         }
         if (target == exitButton) {
@@ -273,7 +233,7 @@ public class ControlPanel extends Frame {
             return true;
         }
         if (buttons.contains(target)) {
-            paintPage(kernel.getPage(buttons.indexOf(target)));
+            kernel.paintPage(kernel.getPage(buttons.indexOf(target)));
             return true;
         }
         return false;

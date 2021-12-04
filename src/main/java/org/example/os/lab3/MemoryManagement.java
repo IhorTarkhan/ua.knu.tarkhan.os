@@ -9,17 +9,12 @@ public class MemoryManagement {
         }
 
         validateFile(args[0]);
-        String commandFile = args[0];
-        ControlPanel controlPanel = new ControlPanel("Memory Management");
-
         if (args.length == 2) {
             validateFile(args[1]);
-            controlPanel.init(commandFile, args[1]);
+            new ControlPanel("Memory Management", args[0], args[1]);
         } else {
-            controlPanel.init(commandFile, null);
-
+            new ControlPanel("Memory Management", args[0], null);
         }
-
     }
 
     private static void validateFile(String fileSrc) {
