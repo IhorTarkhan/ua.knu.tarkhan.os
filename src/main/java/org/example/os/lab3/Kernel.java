@@ -9,10 +9,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class Kernel extends Thread {
@@ -20,13 +17,46 @@ public class Kernel extends Thread {
     private final List<Instruction> instructions = new ArrayList<>();
     private final ControlPanel controlPanel;
     private final Config config;
+    private final int tau;
+    private final int schedules;
+    private final IOSystem io;
     private int step = 0;
 
+    @SneakyThrows
     public Kernel(ControlPanel controlPanel, String configFile, String commands) {
         this.controlPanel = controlPanel;
         this.controlPanel.reset();
         this.config = configInit(configFile);
         commandsInit(commands);
+
+        List<String> lines = Files.lines(Paths.get(configFile)).toList();
+        tau = getLinesFrom("tau", lines)
+                .findFirst()
+                .map(value -> {
+                    int result = Integer.parseInt(value[1]);
+                    if (result < 10 || result > 10000) {
+                        throw new RuntimeException("MemoryManagement: tau out of bounds.");
+                    }
+                    return result;
+                }).orElse(100);
+        schedules = getLinesFrom("schedules", lines)
+                .findFirst()
+                .map(value -> {
+                    int result = Integer.parseInt(value[1]);
+                    if (result < 2 || result > 16) {
+                        throw new RuntimeException("MemoryManagement: schedules out of bounds.");
+                    }
+                    return result;
+                }).orElse(3);
+        io = getLinesFrom("clockticks", lines)
+                .findFirst()
+                .map(value -> {
+                    int result = Integer.parseInt(value[1]);
+                    if (result < 2 || result > 100) {
+                        throw new RuntimeException("MemoryManagement: clockticks out of bounds.");
+                    }
+                    return new IOSystem(schedules, result);
+                }).orElse(null);
         int map_count = 0;
         for (int i = 0; i < config.getVirtualPageNum(); i++) {
             Page page = memVector.get(i);
@@ -66,6 +96,9 @@ public class Kernel extends Thread {
                 throw new RuntimeException("MemoryManagement: Instruction (" + instruction.inst() + " " + instruction.address() + ") out of bounds.");
             }
         }
+
+        PageFault.wsclock = new WSClock();
+        PageFault.wsclock.init(memVector);
     }
 
     @SneakyThrows
@@ -237,7 +270,7 @@ public class Kernel extends Thread {
     @SneakyThrows
     public void step(boolean isRun) {
         setStatus(isRun ? "RUN" : "STEP");
-        Thread.sleep(20);
+        Thread.sleep(100);
         Instruction instruct = instructions.get(step);
         controlPanel.instructionValueLabel.setText(instruct.inst());
         controlPanel.addressValueLabel.setText(Long.toString(instruct.address(), config.getAddressRadix()));
@@ -254,7 +287,7 @@ public class Kernel extends Thread {
                 if (config.isDoStdoutLog()) {
                     System.out.println("READ " + Long.toString(instruct.address(), config.getAddressRadix()) + " ... page fault");
                 }
-                PageFault.replacePage(memVector, config.getVirtualPageNum(), Virtual2Physical.pageNum(instruct.address(), config.getVirtualPageNum(), config.getBlock()), this);
+                PageFault.replacePage(memVector, config.getVirtualPageNum(), Virtual2Physical.pageNum(instruct.address(), config.getVirtualPageNum(), config.getBlock()), this, tau, io);
                 controlPanel.pageFaultValueLabel.setText("YES");
             } else {
                 page.R = 1;
@@ -276,7 +309,7 @@ public class Kernel extends Thread {
                 if (config.isDoStdoutLog()) {
                     System.out.println("WRITE " + Long.toString(instruct.address(), config.getAddressRadix()) + " ... page fault");
                 }
-                PageFault.replacePage(memVector, config.getVirtualPageNum(), Virtual2Physical.pageNum(instruct.address(), config.getVirtualPageNum(), config.getBlock()), this);
+                PageFault.replacePage(memVector, config.getVirtualPageNum(), Virtual2Physical.pageNum(instruct.address(), config.getVirtualPageNum(), config.getBlock()), this, tau, io);
                 controlPanel.pageFaultValueLabel.setText("YES");
             } else {
                 page.M = 1;
@@ -301,6 +334,7 @@ public class Kernel extends Thread {
         }
         step++;
         controlPanel.timeValueLabel.setText(step * 10 + " (ns)");
+        io.writeAll();
 
 
         if (isRunFinished()) {

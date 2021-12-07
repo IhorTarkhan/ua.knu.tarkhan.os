@@ -9,6 +9,7 @@ public class Page {
     public int lastTouchTime;
     public final long high;
     public final long low;
+    public byte scheduled = 0;
 
     public Page(int id, long high, long low) {
         this.id = id;
