@@ -2,43 +2,42 @@ package org.example.os.lab3;
 
 import org.example.os.lab3.domain.Page;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 
 public class WSClock {
+    private final List<Integer> indexes = new ArrayList<>();
     private int pointer = 0;
-    private Vector indexes = new Vector();
 
-    public void init(List mem) {
-        if (indexes.size() == 0) {
-            for (int i = 0; i < mem.size(); i++) {
-                Page page = (Page) mem.get(i);
+    public WSClock() {
+    }
 
-                if (page.physical == -1)
-                    continue;
-
-                indexes.addElement(i);
+    public WSClock(List<Page> mem) {
+        for (int i = 0; i < mem.size(); i++) {
+            if (mem.get(i).physical == -1) {
+                continue;
             }
+            indexes.add(i);
         }
     }
 
-    public int getReplacable(List mem, int tau, int addingPage, IOSystem io) {
-
+    public int getReplaceable(List<Page> mem, int tau, int addingPage, IOSystem io) {
         int removingPage = -1;
         int lastUnmodifiedPage = -1;
         int index = -1;
-        int moves = 0;
         boolean writeScheduled = false;
 
-        while (moves < indexes.size() || writeScheduled) {
-            moves++;
-            if (pointer == indexes.size())
+        for (int moves = 1; moves < indexes.size() || writeScheduled; moves++) {
+            if (pointer == indexes.size()) {
                 pointer = 0;
+            }
 
-            if (writeScheduled) io.tick();
+            if (writeScheduled) {
+                io.tick();
+            }
 
-            index = (int) indexes.elementAt(pointer);
-            Page page = (Page) mem.get(index);
+            index = indexes.get(pointer);
+            Page page = mem.get(index);
 
             if (page.R == 1) {
                 page.R = 0;
@@ -46,9 +45,9 @@ public class WSClock {
                 continue;
             }
 
-            if (page.M == 0)
+            if (page.M == 0) {
                 lastUnmodifiedPage = index;
-
+            }
 
             if (page.lastTouchTime < tau) {
                 pointer++;
@@ -62,20 +61,17 @@ public class WSClock {
             }
 
             removingPage = index;
-
             break;
         }
 
-        if (removingPage == -1)
+        if (removingPage == -1) {
             removingPage = lastUnmodifiedPage;
+        }
 
-        if (removingPage == -1)
+        if (removingPage == -1) {
             removingPage = index;
-
-        System.out.println(removingPage);
-
-        indexes.setElementAt(addingPage, indexes.indexOf(removingPage));
-
+        }
+        indexes.set(indexes.indexOf(removingPage), addingPage);
         return removingPage;
     }
 }

@@ -97,8 +97,7 @@ public class Kernel extends Thread {
             }
         }
 
-        PageFault.wsclock = new WSClock();
-        PageFault.wsclock.init(memVector);
+        PageFault.wsclock = new WSClock(memVector);
     }
 
     @SneakyThrows
@@ -270,7 +269,7 @@ public class Kernel extends Thread {
     @SneakyThrows
     public void step(boolean isRun) {
         setStatus(isRun ? "RUN" : "STEP");
-        Thread.sleep(100);
+        Thread.sleep(20);
         Instruction instruct = instructions.get(step);
         controlPanel.instructionValueLabel.setText(instruct.inst());
         controlPanel.addressValueLabel.setText(Long.toString(instruct.address(), config.getAddressRadix()));
@@ -287,7 +286,7 @@ public class Kernel extends Thread {
                 if (config.isDoStdoutLog()) {
                     System.out.println("READ " + Long.toString(instruct.address(), config.getAddressRadix()) + " ... page fault");
                 }
-                PageFault.replacePage(memVector, config.getVirtualPageNum(), Virtual2Physical.pageNum(instruct.address(), config.getVirtualPageNum(), config.getBlock()), this, tau, io);
+                PageFault.replacePage(memVector, Virtual2Physical.pageNum(instruct.address(), config.getVirtualPageNum(), config.getBlock()), this, tau, io);
                 controlPanel.pageFaultValueLabel.setText("YES");
             } else {
                 page.R = 1;
@@ -309,7 +308,7 @@ public class Kernel extends Thread {
                 if (config.isDoStdoutLog()) {
                     System.out.println("WRITE " + Long.toString(instruct.address(), config.getAddressRadix()) + " ... page fault");
                 }
-                PageFault.replacePage(memVector, config.getVirtualPageNum(), Virtual2Physical.pageNum(instruct.address(), config.getVirtualPageNum(), config.getBlock()), this, tau, io);
+                PageFault.replacePage(memVector, Virtual2Physical.pageNum(instruct.address(), config.getVirtualPageNum(), config.getBlock()), this, tau, io);
                 controlPanel.pageFaultValueLabel.setText("YES");
             } else {
                 page.M = 1;

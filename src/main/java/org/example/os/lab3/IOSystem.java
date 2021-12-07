@@ -3,53 +3,54 @@ package org.example.os.lab3;
 import org.example.os.lab3.domain.Page;
 
 import java.util.Random;
-import java.util.Vector;
+import java.util.List;
+import java.util.ArrayList;
 
 class IOSystem {
-    int max_schedules;
-    int curr_schedules = 0;
-    int clockticks;
-    int curr_clockticks;
-    Vector writingPages = new Vector();
+    private final List<Page> writingPages = new ArrayList<>();
+    private final int maxSchedules;
+    private final int clockTicks;
+    private int currSchedules = 0;
+    private int currClockTicks = 0;
 
-    public IOSystem(int schedules, int clockticks) {
-        this.max_schedules = schedules;
-        this.clockticks = clockticks;
+    public IOSystem(int schedules, int clockTicks) {
+        this.maxSchedules = schedules;
+        this.clockTicks = clockTicks;
     }
 
     boolean scheduleWrite(Page page) {
-        if (curr_schedules == max_schedules)
+        if (currSchedules == maxSchedules) {
             return false;
+        }
         page.scheduled = 1;
-        writingPages.addElement(page);
-        curr_schedules++;
+        writingPages.add(page);
+        currSchedules++;
         return true;
     }
 
     void tick() {
-        curr_clockticks++;
-        if (curr_clockticks == clockticks) {
-            curr_clockticks = 0;
+        currClockTicks++;
+        if (currClockTicks == clockTicks) {
+            currClockTicks = 0;
             oneWrite();
         }
     }
 
     void oneWrite() {
         Random random = new Random();
-        int index = random.nextInt(curr_schedules);
+        int index = random.nextInt(currSchedules);
 
-        Page page = (Page) writingPages.elementAt(index);
+        Page page = writingPages.get(index);
         page.scheduled = 0;
         page.M = 0;
 
-        writingPages.removeElement(page);
-        curr_schedules--;
+        writingPages.remove(page);
+        currSchedules--;
     }
 
     void writeAll() {
-        curr_clockticks = 0;
-        int scheduled_amount = curr_schedules;
-        for (int i = 0; i < scheduled_amount; i++) {
+        currClockTicks = 0;
+        for (int i = 0; i < currSchedules; i++) {
             oneWrite();
         }
     }
